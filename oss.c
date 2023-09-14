@@ -11,6 +11,34 @@
 
 #define SHMKEY 55555
 
+struct PCB {
+        int occupied;
+        pid_t pid;
+        int startSeconds;
+        int startNano;
+}
+
+void launchChild(){
+        pid_t child_pid = fork();
+        if(child_pid == 0){
+                //Make struct entry
+                //Make Random Second and NanoSecond based on parameters
+                char *args[] = {"./worker", "RandomSec", "RandomNano",NULL};
+                execvp("./worker", args);
+
+                printf("Something horrible happened...\n");
+                exit(1);
+        }
+}
+
+void updateTime(){
+        sharedTime[1] = sharedTime[1] + 100000000;
+        if (sharedTime[1] >= 1000000000 ){
+                sharedTime[0] = sharedTime[0] + 1;
+                sharedTime[1] = sharedTime[1] - 1000000000;
+        }
+}
+
 void help(){
         printf("Program usage\n-h = help\n-n [int] = Num Children to Launch\n-s [int] = Num of children allowed at once\n-t [int] = Max num of seconds for each child to be alive");
         printf("Default values are -n 5 -s 3 -t 3\nThis Program is designed to take in 3 integers for Num Processes, Num of processes allowed at once,\nand Max num of seconds for each process");
@@ -54,23 +82,33 @@ int main(int argc, char** argv) {
                 }
         }
 
-        for(int i = 0; i < proc; i++){
+        struct PCB processTable[20];
+
+        int i = 0;
+        while(i < procs){
+                updateTime();
+                if (sharedTime[1] == 500000000){
+                        //display table
+                {
+
                 if (i >= simul){
-                        pid_t done_id = wait(NULL);
+                        int pid = waitpid(-1,0,WNOHANG);
+                        if(pid == 0){
+                                //Nothing
+                        }else{
+                                launchChild();
+                                i++;
+                        }
+
+                }else{
+                        launchChild();
+                        i++;
                 }
 
-                pid_t child_pid = fork();
-                if (child_pid == 0){
-
-                        char *args[] = {"./worker", "3", NULL};
-                        execvp("./worker", args);//launch worker
-
-                        printf("Something horrible happened...\n");
-                        exit(1);
-                }
         }
+
         for(int i = 0; i < simul; i++){
-             wait(NULL);//wait for all children to die
+                wait(NULL);//wait for all children to die
         }
 
         shmdt(sharedTime);
@@ -80,3 +118,4 @@ int main(int argc, char** argv) {
 
         return 0;
 }
+
