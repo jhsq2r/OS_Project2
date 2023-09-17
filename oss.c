@@ -119,8 +119,13 @@ int main(int argc, char** argv) {
 
         }
 
-        for(int i = 0; i < simul; i++){
-                wait(NULL);//wait for all children to die
+        i = 0;
+        while(i < simul){
+                updateTime(sharedTime);
+                int pid = waitpid(-1,&status,WNOHANG);//wait for all children to die
+                if(pid != 0){
+                        i++;
+                }
         }
 
         shmdt(sharedTime);
@@ -130,5 +135,6 @@ int main(int argc, char** argv) {
 
         return 0;
 }
+
 
 
