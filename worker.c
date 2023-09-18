@@ -27,10 +27,14 @@ int main(int argc, char** argv){
         printf("WORKER PID:%d PPID:%d SysClockS: %d SysclockNano: %d TermTimeS: %d TermTimeNano: %d JUST STARTING\n",getpid(),getppid(),sharedTime[0],sharedTime[1],exitTime[0],exitTime[1]);
 
         int currentTime = sharedTime[0];
-
+        int secondsPassed = 0;
         while (exitTime[0] > sharedTime[0] || exitTime[1] > sharedTime[1]){
+                if(sharedTime[0] - exitTime[0] >= 2){
+                        break;
+                }
                 if(currentTime != sharedTime[0]){
-                        printf("WORKER PID:%d PPID:%d SysClockS: %d SysclockNano: %d TermTimeS: %d TermTimeNano: %d SECONDS HAVE PASSED\n",getpid(),getppid(),sharedTime[0],sharedTime[1],exitTime[0],exitTime[1]);
+                        secondsPassed += sharedTime[0]-currentTime;
+                        printf("WORKER PID:%d PPID:%d SysClockS: %d SysclockNano: %d TermTimeS: %d TermTimeNano: %d, %d SECONDS HAVE PASSED\n",getpid(),getppid(),sharedTime[0],sharedTime[1],exitTime[0],exitTime[1],secondsPassed);
                         currentTime = sharedTime[0];
                 }
         }
@@ -42,4 +46,5 @@ int main(int argc, char** argv){
         return 0;
 
 }
+
 
