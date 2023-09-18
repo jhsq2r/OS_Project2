@@ -43,6 +43,8 @@ void help(){
 
 int main(int argc, char** argv) {
 
+        srand(time(NULL));
+        int seed = rand();
         int proc = 5;
         int simul = 3;
         int maxTime = 3;//default parameters
@@ -83,7 +85,8 @@ int main(int argc, char** argv) {
         int status;
         int i = 0;
         while(i < proc){
-                srand(time(NULL));
+                seed++;
+                srand(seed);
                 int pid = waitpid(-1,&status,WNOHANG);
                 //printf("i = %d\n", i);
                 updateTime(sharedTime);
@@ -92,6 +95,11 @@ int main(int argc, char** argv) {
                 }
 
                 if((i >= simul && pid != 0) || i < simul){
+                        for(int x = 0; x < (i+1); x++){
+                                if(processTable[x].pid == pid){
+                                        processTable[x].occupied = 0;
+                                }
+                        }
                         pid_t child_pid = fork();
                         if(child_pid == 0){
                                 char convertSec[20];
@@ -135,6 +143,7 @@ int main(int argc, char** argv) {
 
         return 0;
 }
+
 
 
 
