@@ -5,12 +5,33 @@
 #include <sys/wait.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
+#include <sys/time.h>
 #include <time.h>
+#include <signal.h>
 
 //Creator: Jarod Stagner
 //Turn-in date:
 
 #define SHMKEY 55555
+
+static void myhandler(int s){
+        printf("Killing all... exiting...\n");
+        kill(0,SIGTERM);
+}
+
+static int setupinterrupt(void) {
+                struct sigaction act;
+                act.sa_handler = myhandler;
+                act.sa_flags = 0;
+                return (sigemptyset(&act.sa_mask) || sigaction(SIGPROF, &act, NULL));
+}
+static int setupitimer(void) {
+                struct itimerval value;
+                value.it_interval.tv_sec = 60;
+                value.it_interval.tv_usec = 0;
+                value.it_value = value.it_interval;
+                return (setitimer(ITIMER_PROF, &value, NULL));
+}
 
 struct PCB {
         int occupied;
@@ -42,6 +63,15 @@ void help(){
 }
 
 int main(int argc, char** argv) {
+
+        if (setupinterrupt() == -1) {
+                perror("Failed to set up handler for SIGPROF");
+                return 1;
+        }
+        if (setupitimer() == -1) {
+                perror("Failed to set up the ITIMER_PROF interval timer");
+                return 1;
+        }
 
         srand(time(NULL));
         int seed = rand();
@@ -143,6 +173,7 @@ int main(int argc, char** argv) {
 
         return 0;
 }
+
 
 
 
