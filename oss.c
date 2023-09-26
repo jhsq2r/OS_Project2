@@ -10,7 +10,7 @@
 #include <signal.h>
 
 //Creator: Jarod Stagner
-//Turn-in date:
+//Turn-in date:09/26/2023
 
 #define SHMKEY 55555
 
@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
 
                 if((i >= simul && pid != 0) || i < simul){
                         for(int x = 0; x < (i+1); x++){
-                                if(processTable[x].pid == pid){
+                                if(waitpid(processTable[x].pid, &status, WNOHANG) != 0){
                                         processTable[x].occupied = 0;
                                 }
                         }
@@ -162,9 +162,16 @@ int main(int argc, char** argv) {
                 updateTime(sharedTime);
                 int pid = waitpid(-1,&status,WNOHANG);//wait for all children to die
                 if(pid != 0){
+                        for(int x = 0; x < (proc - simul + i + 1); x++){
+                                if(waitpid(processTable[x].pid,&status,WNOHANG) != 0){
+                                        processTable[x].occupied = 0;
+                                }
+                        }
                         i++;
                 }
         }
+
+        displayTable(proc, processTable);
 
         shmdt(sharedTime);
         shmctl(shmid,IPC_RMID,NULL);
@@ -173,6 +180,7 @@ int main(int argc, char** argv) {
 
         return 0;
 }
+
 
 
 
